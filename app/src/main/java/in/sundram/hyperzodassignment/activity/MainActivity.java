@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private List<MerchantDataModel> dataModelList;
     private static final int REQUEST_CHECK_SETTINGS = 214;
     String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
-
+    String service_provider="";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         }
         try {
+            service_provider=LocationManager.GPS_PROVIDER;
             gps_enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         } catch (Exception ex) {
             ex.printStackTrace(
@@ -92,6 +93,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             );
         }
         try {
+            service_provider=LocationManager.NETWORK_PROVIDER;
             network_enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -160,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
             //when permission enabled then get the user current location and bind to view and call recyclerview manage method
             locationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER, 5000, 10, loc -> {
+                    service_provider, 5000, 10, loc -> {
                         Geocoder gcd = new Geocoder(context, Locale.getDefault());
                         List<Address> addresses;
                         try {
@@ -189,10 +191,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull @NotNull String[] permissions, @NonNull @NotNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-//        if (!EasyPermissions.hasPermissions(this,perms)){
-//            EasyPermissions.requestPermissions(this, "We need permissions because of the location..",
-//                    1, perms);
-//        }
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
 
     }
