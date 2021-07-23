@@ -1,6 +1,7 @@
 package in.sundram.hyperzodassignment.activity;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,6 +10,7 @@ import android.location.Geocoder;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -16,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -51,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private ProgressBar pb, toolbar_pb;
     private MerchantItemAdapter adapter;
     private List<MerchantDataModel> dataModelList;
+    private static final int REQUEST_CHECK_SETTINGS = 214;
     String[] perms = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION};
 
     @Override
@@ -59,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         setContentView(R.layout.activity_main);
         try {
             init();
-            getLocationPermissionAndBindDataToView();
+            checkWhetherGPSIsEnabledOrNotAndHandleFunctionAccordingToResult();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -72,6 +76,39 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         merchant_rv = findViewById(R.id.merchant_rv);
         pb = findViewById(R.id.pb);
         toolbar_pb = findViewById(R.id.toolbar_pb);
+    }
+
+    private void checkWhetherGPSIsEnabledOrNotAndHandleFunctionAccordingToResult() {
+        boolean gps_enabled = false;
+        boolean network_enabled = false;
+        if (locationManager == null) {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        }
+        try {
+            gps_enabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch (Exception ex) {
+            ex.printStackTrace(
+
+            );
+        }
+        try {
+            network_enabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        if (!gps_enabled && !network_enabled) {
+            AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+            dialog.setMessage("GPS not enabled");
+            dialog.setPositiveButton("Ok", (dialog1, which) -> {
+                //this will navigate user to the device location settings screen
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivityForResult(intent, REQUEST_CHECK_SETTINGS);
+            });
+            AlertDialog alert = dialog.create();
+            alert.show();
+        } else {
+            getLocationPermissionAndBindDataToView();
+        }
     }
 
     private void manageRecyclerView() {
@@ -109,7 +146,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     private void handleToGetCurrentLocation() {
         try {
-            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
                 Log.w(TAG, "hasPermissions: API version < M, returning true by default");
                 if (ActivityCompat.checkSelfPermission(this,
@@ -145,7 +181,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         }
                     });
 
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -154,7 +189,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull @NotNull String[] permissions, @NonNull @NotNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        if (!EasyPermissions.hasPermissions(this,perms)){
+//            EasyPermissions.requestPermissions(this, "We need permissions because of the location..",
+//                    1, perms);
+//        }
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+
     }
 
     @Override
@@ -175,8 +215,16 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
-            // Do something after user returned from app settings screen
+
             getLocationPermissionAndBindDataToView();
+        }
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+            if (resultCode == Activity.RESULT_OK) {
+                getLocationPermissionAndBindDataToView();
+            }
+            if (resultCode == Activity.RESULT_CANCELED) {
+                checkWhetherGPSIsEnabledOrNotAndHandleFunctionAccordingToResult();
+            }
         }
     }
 
