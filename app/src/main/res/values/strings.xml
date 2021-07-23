@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">HyperZodAssignment</string>
+    <string name="some_text_goes_here">Some Text Goes here</string>
+    <string name="todo">todo</string>
+    <string name="celebration_by_online_kaka">Celebration By Online Kaka</string>
+    <string name="pre_order">Pre-Order</string>
+    <string name="exclusive_discount_on_every_order">Exclusive Discount On Every Order</string>
+    <string name="_4_5">4.5</string>
+    <string name="view_more">View More</string>
+    <string name="details">Details</string>
+</resources>
